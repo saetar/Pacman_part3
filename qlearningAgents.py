@@ -136,7 +136,7 @@ class PacmanQAgent(QLearningAgent):
     the values.
     """
     "*** YOUR CODE HERE ***"
-    def __init__(self, epsilon=0.0,gamma=0.8,alpha=0.0, numTraining=0, **args):
+    def __init__(self, epsilon=0.25,gamma=0.8,alpha=0.35, numTraining=0, **args):
         """
         These default parameters can be changed from the pacman.py command line.
         For example, to change the exploration rate, try:
