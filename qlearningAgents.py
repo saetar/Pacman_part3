@@ -188,6 +188,8 @@ class ApproximateQAgent(PacmanQAgent):
           Should return Q(state,action) = w * featureVector
           where * is the dotProduct operator
         """
+        if state == 'TERMINAL_STATE':
+            return 0.0
         features = self.featExtractor.getFeatures(state, action)
         runningSum = 0.0
         for feature in features:
@@ -199,7 +201,8 @@ class ApproximateQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         features = self.featExtractor.getFeatures(state, action)
-        discounted = self.discount * self.getQValue(nextState, self.computeActionFromQValues(nextState))
+        a = self.computeActionFromQValues(nextState)
+        discounted = self.discount * self.getQValue(nextState, a)
         difference = reward + discounted - self.getQValue(state, action)
         for feature in features:
             oldWeight = self.weights[feature]
@@ -213,5 +216,5 @@ class ApproximateQAgent(PacmanQAgent):
         # did we finish training?
         if self.episodesSoFar == self.numTraining:
             # you might want to print your weights here for debugging
-            "*** YOUR CODE HERE ***"
+            print self.weights
             pass

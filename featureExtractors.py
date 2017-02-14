@@ -52,6 +52,9 @@ class CoordinateExtractor(FeatureExtractor):
         feats['action=%s' % action] = 1.0
         return feats
 
+def manDist(xy1, xy2):
+    return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+
 def closestFood(pos, food, walls):
     """
     closestFood -- this is similar to the function that we have
@@ -83,6 +86,7 @@ class SimpleExtractor(FeatureExtractor):
         - whether a ghost collision is imminent
         - whether a ghost is one step away
         """
+
         # extract the grid of food and wall locations and get the ghost locations
         food = state.getFood()
         walls = state.getWalls()
@@ -102,6 +106,63 @@ class SimpleExtractor(FeatureExtractor):
 
         # if there is no danger of ghosts then add the food feature
         if not features["#-of-ghosts-1-step-away"] and food[next_x][next_y]:
+            features["eats-food"] = 1.0
+
+        dist = closestFood((next_x, next_y), food, walls)
+        if dist is not None:
+            # make the distance a number less than one otherwise the update
+            # will diverge wildly
+            features["closest-food"] = float(dist) / (walls.width * walls.height)
+        features.divideAll(10.0)
+        return features
+
+class AdvancedFeatureExtractor(FeatureExtractor):
+    def getFeatures(self, state, action):
+        """
+        Returns features for a basic reflex Pacman:
+        - whether food will be eaten
+        - how far away the next food is
+        - whether a ghost collision is imminent
+        - whether a ghost is one step away scared
+        - whether a ghost is one step away not-scared
+
+        Weights: {
+            '#-of-ghosts-1-step-away-and-not-scared': -539.3399358389521,
+            'closest-food': -4.015270353339094,
+            '#-of-ghosts-1-step-away-and-scared': 291.74489904846456,
+            'bias': 206.5118324929459,
+            'eats-food': 306.8870548768516
+        }
+
+        These weights show that it is very undesirable for there to be a ghost very close to Pacman while not scared,
+        but that it is very desirable for there to be a ghost close that IS scared. Similarly, the farther the closest
+        food is, the worse Pacman is off, and that a particular action causes Pacman to eat food is desirable. 
+        """
+        # extract the grid of food and wall locations and get the ghost locations
+        food = state.getFood()
+        walls = state.getWalls()
+        ghostStates = state.getGhostStates()
+        features = util.Counter()
+
+        features["bias"] = 1.0
+
+        # compute the location of pacman after he takes the action
+        x, y = state.getPacmanPosition()
+        if not action == None:
+            dx, dy = Actions.directionToVector(action)
+        else:
+            dx, dy = 0, 0
+        next_x, next_y = int(x + dx), int(y + dy)
+
+        # count the number of ghosts 1-step away
+        features["#-of-ghosts-1-step-away-and-scared"] = sum(
+            (next_x, next_y) in Actions.getLegalNeighbors(g.getPosition(), walls) and g.scaredTimer > 1 for g in ghostStates)
+
+        features["#-of-ghosts-1-step-away-and-not-scared"] = sum(
+            (next_x, next_y) in Actions.getLegalNeighbors(g.getPosition(), walls) and not g.scaredTimer > 1 for g in ghostStates)
+
+        # if there is no danger of ghosts then add the food feature
+        if not features["#-of-ghosts-1-step-away-and-not-scared"] and food[next_x][next_y]:
             features["eats-food"] = 1.0
 
         dist = closestFood((next_x, next_y), food, walls)
