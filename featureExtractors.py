@@ -136,7 +136,7 @@ class AdvancedFeatureExtractor(FeatureExtractor):
 
         These weights show that it is very undesirable for there to be a ghost very close to Pacman while not scared,
         but that it is very desirable for there to be a ghost close that IS scared. Similarly, the farther the closest
-        food is, the worse Pacman is off, and that a particular action causes Pacman to eat food is desirable. 
+        food is, the worse Pacman is off, and that a particular action causes Pacman to eat food is desirable.
         """
         # extract the grid of food and wall locations and get the ghost locations
         food = state.getFood()

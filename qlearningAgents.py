@@ -39,7 +39,7 @@ class QLearningAgent(ReinforcementAgent):
           which returns legal actions for a state
     """
     def __init__(self, **args):
-        "You can initialize Q-values here..."
+        "You can initialize Q-values here... (initialized to a util.Counter())"
         ReinforcementAgent.__init__(self, **args)
         self.qValues = util.Counter()
 
@@ -69,6 +69,12 @@ class QLearningAgent(ReinforcementAgent):
           Compute the best action to take in a state.  Note that if there
           are no legal actions, which is the case at the terminal state,
           you should return None.
+
+          Iterates through each action and compares running optimal QValue to
+          current calculated QValue. If they are the same, we add the action to
+          a list of possible actions. If there are no actions that are optimal,
+          we return None. Otherwise, we make a random choice for all actions that
+          are tied with the same optimal QValue.
         """
         actions = self.getLegalActions(state)
         optimalQValue = float('-inf')
@@ -94,6 +100,9 @@ class QLearningAgent(ReinforcementAgent):
 
           HINT: You might want to use util.flipCoin(prob)
           HINT: To pick randomly from a list, use random.choice(list)
+
+          Flips an epsilon-weighted coin to determine a random action
+          versus our calculated optimal action.
         """
         # Pick Action
         legalActions = self.getLegalActions(state)
@@ -112,6 +121,10 @@ class QLearningAgent(ReinforcementAgent):
 
           NOTE: You should never call this function,
           it will be called on your behalf
+
+          Uses an alpha-weighted average between lastly-seen reward
+          and all rewards we've seen before. Updates self.qValues
+          Counter object.
         """
         oldQValue = self.getQValue(state, action)
         vStar = self.computeValueFromQValues(nextState)
@@ -187,6 +200,8 @@ class ApproximateQAgent(PacmanQAgent):
         """
           Should return Q(state,action) = w * featureVector
           where * is the dotProduct operator
+          Implements dot product as described above. Checks to make sure state is not terminal.
+          If it is, return 0.0 because no action is viable.
         """
         if state == 'TERMINAL_STATE':
             return 0.0
@@ -198,7 +213,9 @@ class ApproximateQAgent(PacmanQAgent):
 
     def update(self, state, action, nextState, reward):
         """
-           Should update your weights based on transition
+           Should update your weights based on transition.
+           Implements an update by alpha-update based on reward gained
+           and difference calculated by the overall Q values.
         """
         features = self.featExtractor.getFeatures(state, action)
         a = self.computeActionFromQValues(nextState)
@@ -209,7 +226,7 @@ class ApproximateQAgent(PacmanQAgent):
             self.weights[feature] = oldWeight + self.alpha * difference * features[feature]
 
     def final(self, state):
-        "Called at the end of each game."
+        "Called at the end of each game. saetar: used just to print weights after training"
         # call the super-class final method
         PacmanQAgent.final(self, state)
 
